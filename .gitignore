@@ -13,4 +13,5 @@ Session.vim
 *~
 
 /output/*.json
+/output/*.png
 secrets.sh

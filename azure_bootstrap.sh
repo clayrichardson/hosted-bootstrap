@@ -10,8 +10,23 @@ fi
 export ENVIRONMENT=$1
 source ./bootstrap_env.sh
 
+function azure_login() {
+  log_file='./output/login.log'
+  azure login | tee ${log_file} &
+  sleep 1
+  token=`cat ${log_file} |grep "To sign in"| sed 's/.*code \(.*\) to authenticate.$/\1/'`
+
+  if [ -z "${token}" ]; then
+    echo 'No login token found, exit'
+    exit 1
+  fi
+
+  export AZURE_CLI_TOKEN=${token}
+  phantomjs ./phantom.js
+}
+
 function azure_config() {
-  azure login
+  azure_login
   azure config mode arm
 }
 

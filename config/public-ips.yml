@@ -1,0 +1,6 @@
+---
+public_ips:
+  - jumpbox1_eip
+  - haproxy_eip
+  - concourse_eip
+  - login_wildcard_eip

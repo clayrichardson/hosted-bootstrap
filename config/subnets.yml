@@ -1,0 +1,48 @@
+network:
+  cidr: '10.10.0.0/16'
+subnets:
+  - name: bosh1
+    cidr: '10.10.0.0/24'
+  - name: bosh2
+    cidr: '10.10.64.0/24'
+  - name: bosh3
+    cidr: '10.10.128.0/24'
+  - name: jumpbox1
+    cidr: '10.10.4.0/24'
+  - name: jumpbox2
+    cidr: '10.10.5.0/24'
+  - name: cf1
+    cidr: '10.10.16.0/24'
+  - name: cf2
+    cidr: '10.10.80.0/24'
+  - name: diego1
+    cidr: '10.10.114.0/24'
+  - name: diego2
+    cidr: '10.10.115.0/24'
+  - name: diego3
+    cidr: '10.10.116.0/24'
+  - name: cf-mysql1
+    cidr: '10.10.32.0/24'
+  - name: cf-mysql2
+    cidr: '10.10.96.0/24'
+  - name: cf-mysql3
+    cidr: '10.10.192.0/24'
+  - name: cf-redis1
+    cidr: '10.10.7.0/24'
+  - name: logsearch1
+    cidr: '10.10.46.0/24'
+  - name: logsearch2
+    cidr: '10.10.110.0/24'
+  - name: logsearch3
+    cidr: '10.10.174.0/24'
+  - name: firehose-nozzle1
+    cidr: '10.10.50.0/24'
+  - name: firehose-nozzle2
+    cidr: '10.10.51.0/24'
+  - name: concourse
+    cidr: '10.10.129.0/24'
+  - name: load-balancer
+    cidr: '10.10.253.0/24'
+  - name: errand
+    cidr: '10.10.254.0/24'
+

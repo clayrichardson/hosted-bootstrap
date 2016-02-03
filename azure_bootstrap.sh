@@ -8,6 +8,12 @@ then
 fi
 
 export ENVIRONMENT=$1
+
+if [[ "$ENVIRONMENT" =~ [^a-zA-Z0-9\ ] ]]; then
+  echo "Invalid name ${ENVIRONMENT}, use alphanumeric string"
+  exit 1
+fi
+
 source ./bootstrap_env.sh
 
 function azure_login() {
@@ -22,15 +28,13 @@ function azure_login() {
   fi
 
   export AZURE_CLI_TOKEN=${token}
-  phantomjs ./phantom.js
+  $(npm bin)/phantomjs ./phantom.js
 }
 
 function azure_config() {
   azure_login
   azure config mode arm
 }
-
-echo "Bootstrapping Azure for ${ENVIRONMENT}..."
 
 function create_resource_group(){
   azure group create \
@@ -39,7 +43,6 @@ function create_resource_group(){
     --location $LOCATION \
     --json
 }
-
 
 function create_storage_account(){
   azure storage account create \
@@ -65,7 +68,6 @@ function secondary_storage_key() {
      jq -r .storageAccountKeys.key2
 }
 
-
 function create_storage_containers() {
   PRIMARY_STORAGE_KEY=$(primary_storage_key)
 
@@ -90,28 +92,22 @@ function create_storage_containers() {
 }
 
 function create_public_ip() {
-  azure network public-ip create \
-    --location $LOCATION \
-    --resource-group $RESOURCE_GROUP_NAME \
-    --allocation-method Static \
-    --name $PUBLIC_IP_NAME \
-    --json
-
-  azure network public-ip create \
-    --location $LOCATION \
-    --resource-group $RESOURCE_GROUP_NAME \
-    --allocation-method Static \
-    --name $JUMPBOX_EXTERNAL_IP \
-    --json
+  for name in `cat ./config/public-ips.yml | yaml2json | jq -r .public_ips[]`; do
+    azure network public-ip create \
+      --location $LOCATION \
+      --resource-group $RESOURCE_GROUP_NAME \
+      --allocation-method Static \
+      --name $name
+  done
 }
 
 function create_vnet() {
+  network_cidr=$(cat ./config/subnets.yml| yaml2json | jq -r .network.cidr)
   azure network vnet create \
     --resource-group $RESOURCE_GROUP_NAME \
     --name $VIRTUAL_NETWORK_NAME \
     --location "$LOCATION" \
-    --address-prefixes ${NETWORK_CIDR} \
-    --json
+    --address-prefixes ${network_cidr}
 }
 
 function create_subnet() {
@@ -121,47 +117,14 @@ function create_subnet() {
     --resource-group $RESOURCE_GROUP_NAME \
     --vnet-name $VIRTUAL_NETWORK_NAME \
     --address-prefix $cidr \
-    --name $name \
-    --json
+    --name $name
 }
 
 function create_networks() {
-  create_subnet '10.10.0.0/24' bosh1
-  create_subnet '10.10.64.0/24' bosh2
-  create_subnet '10.10.128.0/24' bosh3
-
-  create_subnet '10.10.4.0/24' jumpbox1
-  create_subnet '10.10.5.0/24' jumpbox1
-
-  create_subnet '10.10.16.0/24' cf1
-  create_subnet '10.10.80.0/24' cf2
-
-  create_subnet '10.10.114.0/24' diego1
-  create_subnet '10.10.115.0/24' diego2
-  create_subnet '10.10.116.0/24' diego3
-
-  create_subnet '10.10.114.0/24' diego1
-  create_subnet '10.10.115.0/24' diego2
-  create_subnet '10.10.116.0/24' diego3
-
-  create_subnet '10.10.32.0/24' cf-mysql1
-  create_subnet '10.10.96.0/24' cf-mysql2
-  create_subnet '10.10.192/24' cf-mysql3
-
-  create_subnet '10.10.7.0/24' cf-redis1
-
-  create_subnet '10.10.46.0/24' logsearch1
-  create_subnet '10.10.110.0/24' logsearch2
-  create_subnet '10.10.174.0/24' logsearch3
-
-  create_subnet '10.10.50.0/24' firehose-nozzle1
-  create_subnet '10.10.51.0/24' firehose-nozzle2
-
-  create_subnet '10.10.129.0/24' concourse
-
-  create_subnet '10.10.253.0/24' load-balancer
-  create_subnet '10.10.254.0/24' errand
-
+  for name in `cat ./config/subnets.yml | yaml2json | jq -r .subnets[].name`; do
+    cidr=`cat config/subnets.yml | yaml2json | jq -r ".subnets[]| select(.name == \"${name}\")|.cidr"`
+    create_subnet $cidr $name
+  done
 }
 
 function generate_password() {
@@ -175,7 +138,7 @@ function generate_password() {
 EOF
 }
 
-function create_active_directory() {
+function create_active_directory_app() {
   azure ad app create \
     --name "${ACTIVE_DIRECTORY_APPLICATION_NAME}" \
     --home-page "https://${ACTIVE_DIRECTORY_APPLICATION_NAME}" \
@@ -184,19 +147,85 @@ function create_active_directory() {
     --json
 }
 
+function internal_load_balancer_property() {
+  name=$1
+  field=$2
+  cat ./config/load-balancers.yml | \
+    yaml2json | \
+    jq -r ".[\"load-balancers\"].internal[]|select(.name == \"${name}\")|.${field}"
+}
+
+function create_internal_load_balancers() {
+  #create internal load balancers
+  for internal_lb_name in $(cat ./config/load-balancers.yml | \
+    yaml2json | \
+    jq -r '.["load-balancers"].internal[].name'
+  ); do
+
+    frontend_internal_ip=$(internal_load_balancer_property ${internal_lb_name} frontend_internal_ip)
+    frontend_subnet_name=$(internal_load_balancer_property ${internal_lb_name} frontend_subnet_name)
+    frontend_port=$(internal_load_balancer_property ${internal_lb_name} frontend_port)
+    backend_port=$(internal_load_balancer_property ${internal_lb_name} backend_port)
+    probe_port=$(internal_load_balancer_property ${internal_lb_name} probe_port)
+    probe_interval=$(internal_load_balancer_property ${internal_lb_name} probe_interval)
+    probe_fail_count=$(internal_load_balancer_property ${internal_lb_name} probe_fail_count)
+
+    frontend_pool_name=${internal_lb_name}_frontpool
+    backend_pool_name=${internal_lb_name}_backpool
+    load_balancer_rule_name=${internal_lb_name}_rule
+    load_balancer_probe_name=${internal_lb_name}_probe
+    # Create Loadbalancer
+    azure network lb create $RESOURCE_GROUP_NAME $internal_lb_name $LOCATION
+
+    # Create frontend pool
+    azure network lb frontend-ip create \
+      -g $RESOURCE_GROUP_NAME \
+      -l $internal_lb_name \
+      -n $frontend_pool_name\
+      -a $frontend_internal_ip \
+      -e $frontend_subnet_name \
+      -m $VIRTUAL_NETWORK_NAME \
+      --json
+
+    # Create backend pool, probes and load balancing rules
+    azure network lb address-pool create \
+      $RESOURCE_GROUP_NAME \
+      $internal_lb_name ${backend_pool_name} \
+      --json
+
+    azure network lb rule create $RESOURCE_GROUP_NAME $internal_lb_name $load_balancer_rule_name \
+      -p tcp -f ${frontend_port} -b ${backend_port} \
+      -t $frontend_pool_name \
+      -o $backend_pool_name \
+      --json
+
+    azure network lb probe create \
+      --protocol tcp \
+      --port $probe_port \
+      --resource-group $RESOURCE_GROUP_NAME \
+      --lb-name $internal_lb_name \
+      --name $load_balancer_probe_name \
+      --interval $probe_interval \
+      --count $probe_fail_count \
+      --json
+  done
+}
+
 function log_output() {
   execute_func=$1
-  eval ${execute_func} | tee "output/${execute_func}.json"
-  #`$execute_func`|tee "output/${execute_func}.json"
+  file_extension=$2
+  eval ${execute_func} | tee "output/${execute_func}.${file_extension}"
 }
 
 azure_config
 generate_password
 
-log_output create_resource_group
-log_output create_storage_account
-log_output create_storage_containers
-log_output create_public_ip
-log_output create_vnet
-log_output create_networks
-log_output create_active_directory
+echo "Bootstrapping Azure for ${ENVIRONMENT}..."
+log_output create_resource_group json
+log_output create_storage_account json
+log_output create_storage_containers json
+log_output create_public_ip log
+log_output create_vnet log
+log_output create_networks log
+log_output create_active_directory_app json
+log_output create_internal_load_balancers json

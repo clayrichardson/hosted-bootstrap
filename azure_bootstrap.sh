@@ -14,10 +14,12 @@ if [[ "$ENVIRONMENT" =~ [^a-zA-Z0-9\ ] ]]; then
   exit 1
 fi
 
+mkdir -p ${OUTPUT_DIR}
+
 source ./bootstrap_env.sh
 
 function azure_login() {
-  log_file='./output/login.log'
+  log_file="${OUTPUT_DIR}/login.log"
   azure login | tee ${log_file} &
   sleep 1
   token=`cat ${log_file} |grep "To sign in"| sed 's/.*code \(.*\) to authenticate.$/\1/'`
@@ -58,14 +60,23 @@ function primary_storage_key() {
    azure storage account keys list \
      --resource-group $RESOURCE_GROUP_NAME \
      $STORAGE_ACCOUNT_NAME --json |\
-     jq -r .storageAccountKeys.key1
+     jq -r .key1
 }
 
 function secondary_storage_key() {
    azure storage account keys list \
      --resource-group $RESOURCE_GROUP_NAME \
      $STORAGE_ACCOUNT_NAME --json |\
-     jq -r .storageAccountKeys.key2
+     jq -r .key2
+}
+
+function get_storage_keys() {
+cat << EOF
+{
+  "primary_storage_key": "$(primary_storage_key)",
+  "secondary_storage_key": "$(secondary_storage_key)"
+}
+EOF
 }
 
 function create_storage_containers() {
@@ -101,6 +112,13 @@ function create_public_ip() {
   done
 }
 
+function get_public_ips() {
+  # this function is to work around the azure cli bug of empty json
+  azure network public-ip list \
+    --resource-group $RESOURCE_GROUP_NAME \
+    --json
+}
+
 function create_vnet() {
   network_cidr=$(cat ./config/subnets.yml| yaml2json | jq -r .network.cidr)
   azure network vnet create \
@@ -127,13 +145,17 @@ function create_networks() {
   done
 }
 
+function generate_ssh_certs() {
+  ssh-keygen -q -t rsa -f ${OUTPUT_DIR}/bosh.key -N "" -C "${ENVIRONMENT} admin: #{SECRET_ADMIN_EMAIL}"
+}
+
 function generate_password() {
   export ACTIVE_DIRECTORY_PASSWORD=`pwgen -s 32 -0`
   export JUMPBOX_PASSWORD=`pwgen -s 32 -0`
-  cat > output/generate_password.json << EOF
+  cat > ${OUTPUT_DIR}/generate_password.json << EOF
 {
-  active_directory_password: ${ACTIVE_DIRECTORY_PASSWORD},
-  jumpbox_password: ${JUMPBOX_PASSWORD}
+  "active_directory_app_client_password": "${ACTIVE_DIRECTORY_PASSWORD}",
+  "jumpbox_password": "${JUMPBOX_PASSWORD}"
 }
 EOF
 }
@@ -214,11 +236,12 @@ function create_internal_load_balancers() {
 function log_output() {
   execute_func=$1
   file_extension=$2
-  eval ${execute_func} | tee "output/${execute_func}.${file_extension}"
+  eval ${execute_func} | tee "${OUTPUT_DIR}/${execute_func}.${file_extension}"
 }
 
 azure_config
 generate_password
+generate_ssh_certs
 
 echo "Bootstrapping Azure for ${ENVIRONMENT}..."
 log_output create_resource_group json
@@ -229,3 +252,7 @@ log_output create_vnet log
 log_output create_networks log
 log_output create_active_directory_app json
 log_output create_internal_load_balancers json
+log_output get_public_ips json
+log_output get_storage_keys json
+
+./create_env.sh ${ENVIRONMENT}

@@ -12,7 +12,6 @@ Session.vim
 .netrwhist
 *~
 
-/output/*.json
-/output/*.png
-/output/*.log
+/output/*
+/node_modules
 secrets.sh

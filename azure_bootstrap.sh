@@ -150,12 +150,12 @@ function generate_ssh_certs() {
 }
 
 function generate_password() {
-  export ACTIVE_DIRECTORY_PASSWORD=`pwgen -s 32 -0`
-  export JUMPBOX_PASSWORD=`pwgen -s 32 -0`
+  export SECRET_ACTIVE_DIRECTORY_PASSWORD=`pwgen -s 32 -0`
+  export SECRET_JUMPBOX_PASSWORD=`pwgen -s 32 -0`
   cat > ${OUTPUT_DIR}/generate_password.json << EOF
 {
-  "active_directory_app_client_password": "${ACTIVE_DIRECTORY_PASSWORD}",
-  "jumpbox_password": "${JUMPBOX_PASSWORD}"
+  "secret_active_directory_app_client_password": "${SECRET_ACTIVE_DIRECTORY_PASSWORD}",
+  "secret_jumpbox_password": "${SECRET_JUMPBOX_PASSWORD}"
 }
 EOF
 }
@@ -165,7 +165,7 @@ function create_active_directory_app() {
     --name "${ACTIVE_DIRECTORY_APPLICATION_NAME}" \
     --home-page "https://${ACTIVE_DIRECTORY_APPLICATION_NAME}" \
     --identifier-uris "https://${ACTIVE_DIRECTORY_APPLICATION_NAME}" \
-    --password ${ACTIVE_DIRECTORY_PASSWORD} \
+    --password ${SECRET_ACTIVE_DIRECTORY_PASSWORD} \
     --json
 }
 

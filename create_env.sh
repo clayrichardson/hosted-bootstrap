@@ -27,9 +27,9 @@ function get_client_id() {
     jq -r ".objectId"
 }
 
-function get_client_secret() {
+function get_app_client_password() {
   cat ${OUTPUT_DIR}/generate_password.json | \
-    jq -r ".active_directory_app_client_password"
+    jq -r ".secret_active_directory_app_client_password"
 }
 
 function get_pub_cert() {
@@ -41,24 +41,25 @@ function decode_bootstrap_output() {
   export CONCOURSE_EIP=$(get_ipaddress_from_name concourse_eip)
   export LOGIN_WILDCARD_EIP=$(get_ipaddress_from_name login_wildcard_eip)
   export JUMPBOX1_EIP=$(get_ipaddress_from_name jumpbox1_eip)
-  export STORAGE_ACCESS_KEY=$(get_storage_primary_key)
+
   export CLIENT_ID=$(get_client_id)
-  export CLIENT_SECRET=$(get_client_secret)
-  export SSH_CERTIFICATE=$(get_pub_cert)
+  export SECRET_STORAGE_ACCESS_KEY=$(get_storage_primary_key)
+  export SECRET_CLIENT_PASSWORD=$(get_app_client_password)
+  export SECRET_SSH_CERTIFICATE=$(get_pub_cert)
 }
 
 function write_to_env() {
   filename=$1
   cat > ${OUTPUT_DIR}/${filename} << EOF
-export COUNCOURSE_EIP=${CONCOURSE_EIP}
-export HAPROXY_EIP=${HAPROXY_EIP}
-export LOGIN_WILDCARD_EIP=${LOGIN_WILDCARD_EIP}
-export JUMPBOX1_EIP=${JUMPBOX1_EIP}
+export COUNCOURSE_EIP="${CONCOURSE_EIP}"
+export HAPROXY_EIP="${HAPROXY_EIP}"
+export LOGIN_WILDCARD_EIP="${LOGIN_WILDCARD_EIP}"
+export JUMPBOX1_EIP="${JUMPBOX1_EIP}"
 
-export STORAGE_ACCESS_KEY=${STORAGE_ACCESS_KEY}
-export CLIENT_ID=${CLIENT_ID}
-export CLIENT_SECRET=${CLIENT_SECRET}
-export SSH_CERTIFICATE=${SSH_CERTIFICATE}
+export CLIENT_ID="${CLIENT_ID}"
+export SECRET_STORAGE_ACCESS_KEY="${SECRET_STORAGE_ACCESS_KEY}"
+export SECRET_CLIENT_PASSWORD="${SECRET_CLIENT_PASSWORD}"
+export SECRET_SSH_CERTIFICATE="${SECRET_SSH_CERTIFICATE}"
 EOF
 }
 

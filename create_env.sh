@@ -1,6 +1,5 @@
 set -ex
 
-
 if [ $# -eq 0 ]
 then
   echo "No ENVIRONMENT arguments supplied"
@@ -32,6 +31,11 @@ function get_app_client_password() {
     jq -r ".secret_active_directory_app_client_password"
 }
 
+function get_jumpbox_password() {
+  cat ${OUTPUT_DIR}/generate_password.json | \
+    jq -r ".secret_jumpbox_password"
+}
+
 function get_pub_cert() {
   cat ${OUTPUT_DIR}/bosh.key.pub
 }
@@ -45,6 +49,7 @@ function decode_bootstrap_output() {
   export CLIENT_ID=$(get_client_id)
   export SECRET_STORAGE_ACCESS_KEY=$(get_storage_primary_key)
   export SECRET_CLIENT_PASSWORD=$(get_app_client_password)
+  export SECRET_JUMPBOX_PASSWORD=$(get_jumpbox_password)
   export SECRET_SSH_CERTIFICATE=$(get_pub_cert)
 }
 
@@ -59,6 +64,7 @@ export JUMPBOX1_EIP="${JUMPBOX1_EIP}"
 export CLIENT_ID="${CLIENT_ID}"
 export SECRET_STORAGE_ACCESS_KEY="${SECRET_STORAGE_ACCESS_KEY}"
 export SECRET_CLIENT_PASSWORD="${SECRET_CLIENT_PASSWORD}"
+export SECRET_JUMPBOX_PASSWORD="${SECRET_JUMPBOX_PASSWORD}"
 export SECRET_SSH_CERTIFICATE="${SECRET_SSH_CERTIFICATE}"
 EOF
 }

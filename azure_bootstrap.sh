@@ -1,4 +1,3 @@
-
 set -ex
 
 if [ $# -eq 0 ]
@@ -9,34 +8,9 @@ fi
 
 export ENVIRONMENT=$1
 
-if [[ "$ENVIRONMENT" =~ [^a-zA-Z0-9\ ] ]]; then
-  echo "Invalid name ${ENVIRONMENT}, use alphanumeric string"
-  exit 1
-fi
-
 mkdir -p ${OUTPUT_DIR}
-
 source ./bootstrap_env.sh
-
-function azure_login() {
-  log_file="${OUTPUT_DIR}/login.log"
-  azure login | tee ${log_file} &
-  sleep 1
-  token=`cat ${log_file} |grep "To sign in"| sed 's/.*code \(.*\) to authenticate.$/\1/'`
-
-  if [ -z "${token}" ]; then
-    echo 'No login token found, exit'
-    exit 1
-  fi
-
-  export AZURE_CLI_TOKEN=${token}
-  $(npm bin)/phantomjs ./phantom.js
-}
-
-function azure_config() {
-  azure_login
-  azure config mode arm
-}
+source ./azure_helpers.sh
 
 function create_resource_group(){
   azure group create \
@@ -146,12 +120,12 @@ function create_networks() {
 }
 
 function generate_ssh_certs() {
-  ssh-keygen -q -t rsa -f ${OUTPUT_DIR}/bosh.key -N "" -C "${ENVIRONMENT} admin: #{SECRET_ADMIN_EMAIL}"
+  ssh-keygen -q -t rsa -f ${SSH_PRIVATE_CERTIFICATE_FILE} -N "" -C "${ENVIRONMENT} admin: #{SECRET_ADMIN_EMAIL}"
 }
 
 function generate_password() {
   export SECRET_ACTIVE_DIRECTORY_PASSWORD=`pwgen -s 32 -0`
-  export SECRET_JUMPBOX_PASSWORD=`pwgen -s 32 -0`
+  export SECRET_JUMPBOX_PASSWORD="$(pwgen -s -n -c -B 31)*"
   cat > ${OUTPUT_DIR}/generate_password.json << EOF
 {
   "secret_active_directory_app_client_password": "${SECRET_ACTIVE_DIRECTORY_PASSWORD}",
@@ -233,13 +207,8 @@ function create_internal_load_balancers() {
   done
 }
 
-function log_output() {
-  execute_func=$1
-  file_extension=$2
-  eval ${execute_func} | tee "${OUTPUT_DIR}/${execute_func}.${file_extension}"
-}
-
-azure_config
+env_check
+azure_login
 generate_password
 generate_ssh_certs
 

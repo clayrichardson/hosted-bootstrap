@@ -8,9 +8,9 @@ fi
 
 export ENVIRONMENT=$1
 
-mkdir -p ${OUTPUT_DIR}
 source ./bootstrap_env.sh
 source ./azure_helpers.sh
+mkdir -p ${OUTPUT_DIR}
 
 function create_resource_group(){
   azure group create \

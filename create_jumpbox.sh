@@ -93,4 +93,4 @@ if [ -z $provision_script ]; then
   exit 0
 fi
 
-#eval ${provision_script}
+eval ${provision_script}

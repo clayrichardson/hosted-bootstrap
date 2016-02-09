@@ -22,6 +22,7 @@ JB_VM_SIZE=Standard_D3_v2
 # ssh -A $JUMPBOX_USER@$DOMAIN_LABEL.$LOCATION.cloudapp.azure.com
 
 #Create the Azure VM
+cat $SSH_PUBLIC_CERTIFICATE_FILE
 function create_azure_vm(){
 azure vm create \
   --name jumpbox1 \
@@ -37,7 +38,9 @@ azure vm create \
   --storage-account-name $STORAGE_ACCOUNT_NAME \
   --subscription $SUBSCRIPTION_ID \
   --resource-group $RESOURCE_GROUP_NAME \
-  --ssh-publickey-file $SSH_PUBLIC_CERTIFICATE_FILE
+  --ssh-publickey-file $SSH_PUBLIC_CERTIFICATE_FILE \
+  --verbose \
+  --json
 }
 
 
@@ -71,14 +74,14 @@ create_azure_vm || {
 }
 
 echo "Waiting 2 Minutes for Azure Operations to Complete..."
-sleep 120
+# sleep 120
 
 connect_vm_nic_to_external_ip jumpbox1_eip || {
    echo "Attaching NIC failed"
    exit 1
 }
 echo "Waiting 2 Minutes for Azure Operations to Complete..."
-sleep 120
+# sleep 120
 
 change_private_ip_address 10.10.4.100 || {
    echo "Changing NIC Pirvate IP failed"
@@ -90,4 +93,4 @@ if [ -z $provision_script ]; then
   exit 0
 fi
 
-eval ${provision_script}
+#eval ${provision_script}

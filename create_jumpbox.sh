@@ -17,11 +17,12 @@ JUMPBOX_USER=vcap
 JUMPBOX_PASSWORD=$SECRET_JUMPBOX_PASSWORD
 JB_SUBNET_NAME=jumpbox1
 JB_IMAGE='Canonical:UbuntuServer:14.04.2-LTS:latest'
-JB_VM_SIZE=Standard_D3_v2
+JB_VM_SIZE=Standard_D2_v2
 
 # ssh -A $JUMPBOX_USER@$DOMAIN_LABEL.$LOCATION.cloudapp.azure.com
 
 #Create the Azure VM
+cat $SSH_PUBLIC_CERTIFICATE_FILE
 function create_azure_vm(){
 azure vm create \
   --name jumpbox1 \
@@ -37,7 +38,9 @@ azure vm create \
   --storage-account-name $STORAGE_ACCOUNT_NAME \
   --subscription $SUBSCRIPTION_ID \
   --resource-group $RESOURCE_GROUP_NAME \
-  --ssh-publickey-file $SSH_PUBLIC_CERTIFICATE_FILE
+  --ssh-publickey-file $SSH_PUBLIC_CERTIFICATE_FILE \
+  --verbose \
+  --json
 }
 
 
@@ -64,30 +67,33 @@ azure network nic set \
 env_check
 azure_login
 
+function vm_creation_process() {
+  create_azure_vm || {
+     echo "Creating Azure VM failed"
+     exit 1
+  }
 
-create_azure_vm || {
-   echo "Creating Azure VM failed"
-   exit 1
+  echo "Waiting 2 Minutes for Azure Operations to Complete..."
+  # sleep 120
+
+  connect_vm_nic_to_external_ip jumpbox1_eip || {
+     echo "Attaching NIC failed"
+     exit 1
+  }
+  echo "Waiting 2 Minutes for Azure Operations to Complete..."
+  # sleep 120
+
+  change_private_ip_address 10.10.4.100 || {
+     echo "Changing NIC Pirvate IP failed"
+     exit 1
+  }
+
+  if [ -z $provision_script ]; then
+    echo "No provision script provided: skipping"
+    exit 0
+  fi
 }
 
-echo "Waiting 2 Minutes for Azure Operations to Complete..."
-sleep 120
-
-connect_vm_nic_to_external_ip jumpbox1_eip || {
-   echo "Attaching NIC failed"
-   exit 1
-}
-echo "Waiting 2 Minutes for Azure Operations to Complete..."
-sleep 120
-
-change_private_ip_address 10.10.4.100 || {
-   echo "Changing NIC Pirvate IP failed"
-   exit 1
-}
-
-if [ -z $provision_script ]; then
-  echo "No provision script provided: skipping"
-  exit 0
-fi
+vm_creation_process
 
 eval ${provision_script}

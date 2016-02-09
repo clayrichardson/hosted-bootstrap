@@ -1,4 +1,6 @@
-source ./secrets.sh
+export SECRETS_FILE="../secrets.sh"
+
+source ${SECRETS_FILE}
 
 export SUBSCRIPTION_ID=${SECRET_SUBSCRIPTION_ID}
 export TENANT_ID=${SECRET_TENANT_ID}

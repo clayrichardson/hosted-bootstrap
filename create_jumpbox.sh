@@ -67,30 +67,33 @@ azure network nic set \
 env_check
 azure_login
 
+function vm_creation_process() {
+  create_azure_vm || {
+     echo "Creating Azure VM failed"
+     exit 1
+  }
 
-create_azure_vm || {
-   echo "Creating Azure VM failed"
-   exit 1
+  echo "Waiting 2 Minutes for Azure Operations to Complete..."
+  # sleep 120
+
+  connect_vm_nic_to_external_ip jumpbox1_eip || {
+     echo "Attaching NIC failed"
+     exit 1
+  }
+  echo "Waiting 2 Minutes for Azure Operations to Complete..."
+  # sleep 120
+
+  change_private_ip_address 10.10.4.100 || {
+     echo "Changing NIC Pirvate IP failed"
+     exit 1
+  }
+
+  if [ -z $provision_script ]; then
+    echo "No provision script provided: skipping"
+    exit 0
+  fi
 }
 
-echo "Waiting 2 Minutes for Azure Operations to Complete..."
-# sleep 120
-
-connect_vm_nic_to_external_ip jumpbox1_eip || {
-   echo "Attaching NIC failed"
-   exit 1
-}
-echo "Waiting 2 Minutes for Azure Operations to Complete..."
-# sleep 120
-
-change_private_ip_address 10.10.4.100 || {
-   echo "Changing NIC Pirvate IP failed"
-   exit 1
-}
-
-if [ -z $provision_script ]; then
-  echo "No provision script provided: skipping"
-  exit 0
-fi
+vm_creation_process
 
 eval ${provision_script}

@@ -120,7 +120,7 @@ function create_networks() {
 }
 
 function generate_ssh_certs() {
-  ssh-keygen -q -t rsa -f ${SSH_PRIVATE_CERTIFICATE_FILE} -N "" -C "${ENVIRONMENT} admin: #{SECRET_ADMIN_EMAIL}"
+  ssh-keygen -q -t rsa -f ${SSH_PRIVATE_CERTIFICATE_FILE} -N "" -C "${ENVIRONMENT} admin: ${SECRET_ADMIN_EMAIL}"
 }
 
 function generate_password() {

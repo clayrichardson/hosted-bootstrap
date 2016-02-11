@@ -8,6 +8,7 @@ fi
 
 export ENVIRONMENT=$1
 source ./bootstrap_env.sh
+source ${OUTPUT_DIR}/${ENVIRONMENT}_env.sh
 
 function azure_login() {
   log_file='./output/login.log'
@@ -38,10 +39,7 @@ function destroy_resource_group() {
 }
 
 function destroy_active_directory_app() {
-  ad_app_object_ids=$(azure ad app list --json | jq -r .[].objectId)
-  for i in $ad_app_object_ids; do
-    azure ad app delete $i -q
-  done
+  azure ad app delete ${CLIENT_ID} -q
 }
 
 function log_output() {

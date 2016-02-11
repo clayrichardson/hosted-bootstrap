@@ -17,7 +17,7 @@ JUMPBOX_USER=vcap
 JUMPBOX_PASSWORD=$SECRET_JUMPBOX_PASSWORD
 JB_SUBNET_NAME=jumpbox1
 JB_IMAGE='Canonical:UbuntuServer:14.04.2-LTS:latest'
-JB_VM_SIZE=Standard_D3_v2
+JB_VM_SIZE=Standard_D2_v2
 
 # ssh -A $JUMPBOX_USER@$DOMAIN_LABEL.$LOCATION.cloudapp.azure.com
 

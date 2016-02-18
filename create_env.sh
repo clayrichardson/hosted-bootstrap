@@ -23,7 +23,7 @@ function get_storage_primary_key() {
 
 function get_client_id() {
   cat ${OUTPUT_DIR}/create_active_directory_app.json | \
-    jq -r ".objectId"
+    jq -r ".appId"
 }
 
 function get_app_client_password() {

@@ -84,7 +84,7 @@ steps = [
 /**********END STEPS THAT PHANTOM SHOULD DO***********************/
 
 //Execute steps one by one
-interval = setInterval(executeRequestsStepByStep,4000);
+interval = setInterval(executeRequestsStepByStep,6000);
 
 function executeRequestsStepByStep(){
     if (loadInProgress == false && typeof steps[testindex] == "function") {

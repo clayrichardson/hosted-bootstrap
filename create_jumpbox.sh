@@ -13,9 +13,10 @@ source ${OUTPUT_DIR}/${ENVIRONMENT}_env.sh
 echo "Trying to create a new Jumpbox VM..."
 
 export JUMPBOX_NIC=${ENVIRONMENT}-jumpbox-nic
+export JUMPBOX_NAME="jumpbox1"
 export JUMPBOX_USER=vcap
 export JUMPBOX_PASSWORD=$SECRET_JUMPBOX_PASSWORD
-export JB_SUBNET_NAME=jumpbox1
+export JB_SUBNET_NAME=${JUMPBOX_NAME}
 export JB_IMAGE='Canonical:UbuntuServer:14.04.2-LTS:latest'
 export JB_VM_SIZE=Standard_D2_v2
 
@@ -25,7 +26,7 @@ export JB_VM_SIZE=Standard_D2_v2
 cat $SSH_PUBLIC_CERTIFICATE_FILE
 function create_azure_vm(){
 azure vm create \
-  --name jumpbox1 \
+  --name $JUMPBOX_NAME \
   --nic-name $JUMPBOX_NIC \
   --location $LOCATION \
   --os-type Linux \
@@ -47,7 +48,7 @@ azure vm create \
 #Connect new VM's nic to the external IP
 # args : name of public_ip
 function connect_vm_nic_to_external_ip() {
-azure network nic set \
+  azure network nic set \
   --resource-group $RESOURCE_GROUP_NAME \
   --public-ip-name $1 \
   --subscription $SUBSCRIPTION_ID \
@@ -64,27 +65,33 @@ azure network nic set \
   --name $JUMPBOX_NIC
 }
 
+function test_jumpbox_vm() {
+  azure vm show acceptance-resource $1 --json|jq .id
+}
+
 env_check
 azure_login
 
 function vm_creation_process() {
-  create_azure_vm || {
+
+  vm=`test_jumpbox_vm ${JUMPBOX_NAME}`
+
+  if [ $vm == 'null' ]; then
+    create_azure_vm || {
      echo "Creating Azure VM failed"
      exit 1
-  }
-
-  echo "Waiting 2 Minutes for Azure Operations to Complete..."
-  # sleep 120
+    }
+  else
+    echo "Jumpbox already exists"
+  fi
 
   connect_vm_nic_to_external_ip jumpbox1_eip || {
      echo "Attaching NIC failed"
      exit 1
   }
-  echo "Waiting 2 Minutes for Azure Operations to Complete..."
-  # sleep 120
 
   change_private_ip_address 10.10.4.100 || {
-     echo "Changing NIC Pirvate IP failed"
+     echo "Changing NIC Private IP failed"
      exit 1
   }
 

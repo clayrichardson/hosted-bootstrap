@@ -12,16 +12,6 @@ source ${OUTPUT_DIR}/${ENVIRONMENT}_env.sh
 
 echo "Trying to create a new Jumpbox VM..."
 
-export JUMPBOX_NIC=${ENVIRONMENT}-jumpbox-nic
-export JUMPBOX_NAME="jumpbox1"
-export JUMPBOX_USER=vcap
-export JUMPBOX_PASSWORD=$SECRET_JUMPBOX_PASSWORD
-export JB_SUBNET_NAME=${JUMPBOX_NAME}
-export JB_IMAGE='Canonical:UbuntuServer:14.04.2-LTS:latest'
-export JB_VM_SIZE=Standard_D2_v2
-
-# ssh -A $JUMPBOX_USER@$DOMAIN_LABEL.$LOCATION.cloudapp.azure.com
-
 #Create the Azure VM
 cat $SSH_PUBLIC_CERTIFICATE_FILE
 function create_azure_vm(){

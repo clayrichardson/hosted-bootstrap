@@ -15,7 +15,13 @@ export BOSH_SUBNET_NAME=${ENVIRONMENT}-bosh
 export CF_SUBNET_NAME=${ENVIRONMENT}-cf
 export DOMAIN_LABEL=${ENVIRONMENT}-domain
 export ACTIVE_DIRECTORY_APPLICATION_NAME=${ENVIRONMENT}-bosh-ad-name
-export OUTPUT_DIR="./output/${ENVIRONMENT}"
+export OUTPUT_DIR="$(pwd)/output/${ENVIRONMENT}"
 export SSH_PRIVATE_CERTIFICATE_FILE="${OUTPUT_DIR}/bosh.key"
 export SSH_PUBLIC_CERTIFICATE_FILE="${SSH_PRIVATE_CERTIFICATE_FILE}.pub"
 
+export JUMPBOX_NIC=${ENVIRONMENT}-jumpbox-nic
+export JUMPBOX_NAME="jumpbox1"
+export JUMPBOX_USER=vcap
+export JB_SUBNET_NAME=jumpbox1
+export JB_IMAGE='Canonical:UbuntuServer:14.04.2-LTS:latest'
+export JB_VM_SIZE=Standard_D2_v2

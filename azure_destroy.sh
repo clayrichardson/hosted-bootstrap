@@ -22,7 +22,7 @@ function azure_login() {
   fi
 
   export AZURE_CLI_TOKEN=${token}
-  $(npm bin)/phantomjs ./phantom.js
+  $(npm bin)/phantomjs ./login.js
 }
 
 function azure_config() {

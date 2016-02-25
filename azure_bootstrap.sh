@@ -143,6 +143,26 @@ function create_active_directory_app() {
     --json
 }
 
+function get_application_id() {
+  cat ${OUTPUT_DIR}/create_active_directory_app.json | \
+    jq -r ".appId"
+}
+
+function create_service_principle() {
+  CLIENT_ID=get_application_id
+  azure ad sp create \
+    --applicationId "${CLIENT_ID}" \
+    --json
+}
+
+function create_role_assignment() {
+  azure role assignment create \
+    --roleName "Contributor" \
+    --spn "https://${ACTIVE_DIRECTORY_APPLICATION_NAME}" \
+    --subscription ${SUBSCRIPTION_ID} \
+    --json
+}
+
 function internal_load_balancer_property() {
   name=$1
   field=$2
@@ -220,6 +240,8 @@ log_output create_public_ip log
 log_output create_vnet log
 log_output create_networks log
 log_output create_active_directory_app json
+log_output create_service_principle json
+log_output create_role_assignment json
 log_output create_internal_load_balancers json
 log_output get_public_ips json
 log_output get_storage_keys json

@@ -56,7 +56,10 @@ azure network nic set \
 }
 
 function test_jumpbox_vm() {
-  azure vm show acceptance-resource $1 --json|jq .id
+  azure vm show \
+    --resource-group ${RESOURCE_GROUP_NAME} \
+    --name $1 \
+    --json |jq .id
 }
 
 env_check

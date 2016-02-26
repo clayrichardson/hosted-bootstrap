@@ -241,6 +241,8 @@ log_output create_vnet log
 log_output create_networks log
 log_output create_active_directory_app json
 log_output create_service_principle json
+# HACK: NEED to wait for a while before role assignment, reason unknown
+sleep 60
 log_output create_role_assignment json
 log_output create_internal_load_balancers json
 log_output get_public_ips json

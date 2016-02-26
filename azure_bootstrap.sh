@@ -149,7 +149,7 @@ function get_application_id() {
 }
 
 function create_service_principle() {
-  CLIENT_ID=get_application_id
+  CLIENT_ID=$(get_application_id)
   azure ad sp create \
     --applicationId "${CLIENT_ID}" \
     --json

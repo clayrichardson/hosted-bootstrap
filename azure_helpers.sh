@@ -25,7 +25,8 @@ function env_check() {
 function log_output() {
   execute_func=$1
   file_extension=$2
-  eval ${execute_func} | tee "${OUTPUT_DIR}/${execute_func}.${file_extension}"
+  file_name=$(echo $execute_func|sed 's/\//-/g')
+  eval ${execute_func} | tee "${OUTPUT_DIR}/${file_name}.${file_extension}"
   if [[ ! ${PIPESTATUS[0]} == 0 ]]; then
     exit 1
   fi

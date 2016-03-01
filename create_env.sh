@@ -36,6 +36,11 @@ function get_jumpbox_password() {
     jq -r ".secret_jumpbox_password"
 }
 
+function get_bosh_password() {
+  cat ${OUTPUT_DIR}/generate_password.json | \
+    jq -r ".secret_bosh_password"
+}
+
 function get_pub_cert() {
   cat ${OUTPUT_DIR}/bosh.key.pub
 }
@@ -50,6 +55,7 @@ function decode_bootstrap_output() {
   export SECRET_STORAGE_ACCESS_KEY=$(get_storage_primary_key)
   export SECRET_CLIENT_PASSWORD=$(get_app_client_password)
   export SECRET_JUMPBOX_PASSWORD=$(get_jumpbox_password)
+  export SECRET_BOSH_PASSWORD=$(get_bosh_password)
   export SECRET_SSH_CERTIFICATE=$(get_pub_cert)
 }
 
@@ -86,6 +92,7 @@ export CLIENT_ID="${CLIENT_ID}"
 export SECRET_STORAGE_ACCESS_KEY="${SECRET_STORAGE_ACCESS_KEY}"
 export SECRET_CLIENT_PASSWORD="${SECRET_CLIENT_PASSWORD}"
 export SECRET_JUMPBOX_PASSWORD="${SECRET_JUMPBOX_PASSWORD}"
+export SECRET_BOSH_PASSWORD="${SECRET_BOSH_PASSWORD}"
 export SECRET_SSH_CERTIFICATE="${SECRET_SSH_CERTIFICATE}"
 
 # from secret
@@ -94,6 +101,7 @@ export SECRET_SUBSCRIPTION_ID=${SECRET_SUBSCRIPTION_ID}
 export SECRET_AZURE_CLI_USERNAME='${SECRET_AZURE_CLI_USERNAME}'
 export SECRET_AZURE_CLI_PASSWORD='${SECRET_AZURE_CLI_PASSWORD}'
 export SECRET_ADMIN_EMAIL='${SECRET_ADMIN_EMAIL}'
+
 
 # for jumpbox
 export JUMPBOX_NIC=${JUMPBOX_NIC}

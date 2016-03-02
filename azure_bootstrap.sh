@@ -207,7 +207,7 @@ function generate_password() {
     cat > ${OUTPUT_DIR}/generate_password.json << EOF
 {
   "secret_active_directory_app_client_password": "${secret_active_directory_password}",
-  "secret_jumpbox_password": "${secret_jumpbox_password}"
+  "secret_jumpbox_password": "${secret_jumpbox_password}",
   "secret_bosh_password": "${secret_bosh_password}"
 }
 EOF

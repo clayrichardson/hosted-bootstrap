@@ -204,11 +204,15 @@ function generate_password() {
     local secret_active_directory_password=`pwgen -s 32 -0`
     local secret_jumpbox_password="$(pwgen -s -n -c -B 31)*"
     local secret_bosh_password=`pwgen -s 32 -0`
+    local secret_concourse_password=`pwgen -s 32 -0`
+    local secret_cc_admin_password=`pwgen -s 32 -0`
     cat > ${OUTPUT_DIR}/generate_password.json << EOF
 {
   "secret_active_directory_app_client_password": "${secret_active_directory_password}",
   "secret_jumpbox_password": "${secret_jumpbox_password}",
-  "secret_bosh_password": "${secret_bosh_password}"
+  "secret_bosh_password": "${secret_bosh_password}",
+  "secret_concourse_password": "${secret_concourse_password}",
+  "secret_cc_admin_password": "${secret_cc_admin_password}"
 }
 EOF
    fi

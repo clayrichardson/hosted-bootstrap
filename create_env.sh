@@ -41,6 +41,16 @@ function get_bosh_password() {
     jq -r ".secret_bosh_password"
 }
 
+function get_concourse_password() {
+  cat ${OUTPUT_DIR}/generate_password.json | \
+    jq -r ".secret_concourse_password"
+}
+
+function get_cc_admin_password() {
+  cat ${OUTPUT_DIR}/generate_password.json | \
+    jq -r ".secret_cc_admin_password"
+}
+
 function get_pub_cert() {
   cat ${OUTPUT_DIR}/bosh.key.pub
 }
@@ -56,6 +66,8 @@ function decode_bootstrap_output() {
   export SECRET_CLIENT_PASSWORD=$(get_app_client_password)
   export SECRET_JUMPBOX_PASSWORD=$(get_jumpbox_password)
   export SECRET_BOSH_PASSWORD=$(get_bosh_password)
+  export SECRET_CONCOURSE_PASSWORD=$(get_concourse_password)
+  export SECRET_CC_ADMIN_PASSWORD=$(get_cc_admin_password)
   export SECRET_SSH_CERTIFICATE=$(get_pub_cert)
 }
 
@@ -83,7 +95,7 @@ export SSH_PRIVATE_CERTIFICATE_FILE="${OUTPUT_DIR}/bosh.key"
 export SSH_PUBLIC_CERTIFICATE_FILE="${SSH_PRIVATE_CERTIFICATE_FILE}.pub"
 
 # from ${ENVIRONMENT}_env.sh
-export COUNCOURSE_EIP="${CONCOURSE_EIP}"
+export CONCOURSE_EIP="${CONCOURSE_EIP}"
 export HAPROXY_EIP="${HAPROXY_EIP}"
 export LOGIN_WILDCARD_EIP="${LOGIN_WILDCARD_EIP}"
 export JUMPBOX1_EIP="${JUMPBOX1_EIP}"
@@ -93,6 +105,8 @@ export SECRET_STORAGE_ACCESS_KEY="${SECRET_STORAGE_ACCESS_KEY}"
 export SECRET_CLIENT_PASSWORD="${SECRET_CLIENT_PASSWORD}"
 export SECRET_JUMPBOX_PASSWORD="${SECRET_JUMPBOX_PASSWORD}"
 export SECRET_BOSH_PASSWORD="${SECRET_BOSH_PASSWORD}"
+export SECRET_CONCOURSE_PASSWORD="${SECRET_CONCOURSE_PASSWORD}"
+export SECRET_CC_ADMIN_PASSWORD="${SECRET_CC_ADMIN_PASSWORD}"
 export SECRET_SSH_CERTIFICATE="${SECRET_SSH_CERTIFICATE}"
 
 # from secret

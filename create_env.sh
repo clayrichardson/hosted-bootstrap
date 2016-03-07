@@ -125,6 +125,16 @@ export JUMPBOX_PASSWORD=$SECRET_JUMPBOX_PASSWORD
 export JB_SUBNET_NAME=${JB_SUBNET_NAME}
 export JB_IMAGE='${JB_IMAGE}'
 export JB_VM_SIZE=${JB_VM_SIZE}
+
+function logmein() {
+  echo "Username:"
+  read USERNAME
+  ssh -A \$USERNAME@$JUMPBOX1_EIP
+}
+
+function logvcapin() {
+  ssh -A -i ./output/$ENVIRONMENT/bosh.key $JUMPBOX_USER@$JUMPBOX1_EIP
+}
 EOF
 }
 

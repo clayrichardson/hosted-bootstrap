@@ -9,15 +9,6 @@ load-balancers:
       probe_interval: 400
       probe_fail_count: 2
 
-    - name: mysql_proxy
-      frontend_subnet_name: load-balancer
-      frontend_internal_ip: 10.10.253.20
-      frontend_port: 3306
-      backend_port: 3306
-      probe_port: 1936
-      probe_interval: 15
-      probe_fail_count: 2
-
   external:
     - name: concourse
       public_ips: concourse_eip

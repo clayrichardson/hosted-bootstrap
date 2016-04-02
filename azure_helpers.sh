@@ -1,20 +1,18 @@
 function azure_login() {
   log_file="${OUTPUT_DIR}/login.log"
   # if list locations fails, we need to login
-  azure location list --subscription $SECRET_SUBSCRIPTION_ID || (
-    azure login | tee ${log_file} &
-    sleep 2
-    token=`cat ${log_file} |grep "To sign in"| sed 's/.*code \(.*\) to authenticate.$/\1/'`
+  azure login | tee ${log_file} &
+  sleep 2
+  token=`cat ${log_file} |grep "To sign in"| sed 's/.*code \(.*\) to authenticate.$/\1/'`
 
-    if [ -z "${token}" ]; then
-      echo 'No login token found, exit'
-      exit 1
-    fi
+  if [ -z "${token}" ]; then
+    echo 'No login token found, exit'
+    exit 1
+  fi
 
-    export AZURE_CLI_TOKEN=${token}
-    $(npm bin)/phantomjs ./login.js
-    wait
-  )
+  export AZURE_CLI_TOKEN=${token}
+  $(npm bin)/phantomjs --debug=true --ssl-protocol=any --ignore-ssl-errors=true ./login.js
+  wait
   azure config mode arm
 }
 

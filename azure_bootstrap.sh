@@ -184,9 +184,9 @@ function create_subnet() {
 
 
 function create_networks() {
-  subnet_names=`cat ./config/subnets.yml | yaml2json | jq -r .subnets[].name`
+  subnet_names=`cat ./config/subnets.yml | ./yaml2json | jq -r .subnets[].name`
   for name in $subnet_names; do
-    local cidr=`cat config/subnets.yml | yaml2json | jq -r ".subnets[]| select(.name == \"${name}\")|.cidr"`
+    local cidr=`cat config/subnets.yml | ./yaml2json | jq -r ".subnets[]| select(.name == \"${name}\")|.cidr"`
     test_create_subnet $name || log_output "create_subnet $cidr $name" log
   done
 }
@@ -284,7 +284,7 @@ function internal_load_balancer_property() {
   name=$1
   field=$2
   cat ./config/load-balancers.yml | \
-    yaml2json | \
+    ./yaml2json | \
     jq -r ".[\"load-balancers\"].internal[]|select(.name == \"${name}\")|.${field}"
 }
 
@@ -428,11 +428,11 @@ for storage_table in stemcells; do
   test_create_storage_table ${storage_table} || log_output "create_storage_table ${storage_table}" json
 done
 
-for public_ip in `cat ./config/public-ips.yml | yaml2json | jq -r .public_ips[]`; do
+for public_ip in `cat ./config/public-ips.yml | ./yaml2json | jq -r .public_ips[]`; do
   test_create_public_ip ${public_ip} || log_output "create_public_ip ${public_ip}" log
 done
 
-vnet_cidr=$(cat ./config/subnets.yml| yaml2json | jq -r .network.cidr)
+vnet_cidr=$(cat ./config/subnets.yml| ./yaml2json | jq -r .network.cidr)
 test_create_vnet ${vnet_cidr} || log_output "create_vnet ${vnet_cidr}" log
 
 create_networks
@@ -445,7 +445,7 @@ test_create_service_principle || (log_output create_service_principle json && sl
 test_create_role_assignment || log_output create_role_assignment json
 
 for internal_lb_name in $(cat ./config/load-balancers.yml | \
-  yaml2json | \
+  ./yaml2json | \
   jq -r '.["load-balancers"].internal[].name'
 ); do
   test_create_internal_load_balancer $internal_lb_name || log_output "create_internal_load_balancer $internal_lb_name" json

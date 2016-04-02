@@ -24,6 +24,7 @@ var configs = {};
 configs.token = system.env['AZURE_CLI_TOKEN'];
 configs.username = system.env['SECRET_AZURE_CLI_USERNAME'];
 configs.password = system.env['SECRET_AZURE_CLI_PASSWORD'];
+configs.environment = system.env['ENVIRONMENT'];
 /*********CONFIG END*****************/
 console.log('All settings loaded, start with execution');
 page.onConsoleMessage = function(msg) {
@@ -35,7 +36,7 @@ steps = [
     function(){
         console.log('Step 1 - Open aka.ms home page');
         page.open("https://aka.ms/devicelogin", function(status){
-
+        page.render("./output/" + configs.environment + "/screen1.png");
         });
     },
     //Step 2 - Input the code
@@ -46,6 +47,7 @@ steps = [
         });
         console.log(configs.token);
         page.sendEvent('keypress', configs.token);
+        page.render("./output/" + configs.environment + "/screen2.png");
     },
     // Step 3 - Click the continue button
     function(){
@@ -53,6 +55,7 @@ steps = [
         page.evaluate(function(){
             document.getElementById("continueBtn").click();
         });
+        page.render("./output/" + configs.environment + "/screen3.png");
     },
     //Step 4 - Login
 
@@ -64,6 +67,7 @@ steps = [
             document.getElementById("cred_password_inputtext").value = configs.password;
             document.getElementById("cred_sign_in_button").click();
         }, configs);
+        page.render("./output/" + configs.environment + "/screen4.png");
     },
     //Step 5 - Login again
     function(){
@@ -73,11 +77,12 @@ steps = [
             document.getElementById("i0118").value = configs.password;
             document.getElementById("idSIButton9").click();
         }, configs);
+        page.render("./output/" + configs.environment + "/screen5.png");
     },
     //Step 6 - screenshot
     function(){
         console.log('Step 6 - screenshot');
-        page.render('./output/screen.png')
+        page.render("./output/" + configs.environment + "/screen6.png");
     },
 
 ];

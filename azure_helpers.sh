@@ -1,8 +1,19 @@
+set -ex
+
 function azure_login() {
   log_file="${OUTPUT_DIR}/login.log"
+  if [ -f $log_file ]; then
+    rm $log_file
+  fi
   # if list locations fails, we need to login
   azure login | tee ${log_file} &
-  sleep 2
+
+  until grep -i "To sign in" $log_file && echo "Found token output"
+  do
+    echo "Waiting for Azure cli to give token..."
+    sleep 1
+  done
+
   token=`cat ${log_file} |grep "To sign in"| sed 's/.*code \(.*\) to authenticate.$/\1/'`
 
   if [ -z "${token}" ]; then

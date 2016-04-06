@@ -1,6 +1,12 @@
 set -ex
 
-function azure_login() {
+source ./helpers.sh
+
+function azure_login(){
+  retry 5 private_azure_login
+}
+
+function private_azure_login() {
   log_file="${OUTPUT_DIR}/login.log"
   if [ -f $log_file ]; then
     rm $log_file

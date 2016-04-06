@@ -7,6 +7,7 @@ provision_script=$2
 
 source ./bootstrap_env.sh
 source ./azure_helpers.sh
+source ./helpers.sh
 
 source ${OUTPUT_DIR}/${ENVIRONMENT}_env.sh
 

@@ -21,46 +21,59 @@ function create_resource_group(){
 }
 
 function create_storage_account(){
+  local storage_account_name=$1
+  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
+  local type=$2
   azure storage account create \
     --resource-group $RESOURCE_GROUP_NAME \
     --subscription $SUBSCRIPTION_ID \
-    --type $STORAGE_TYPE \
+    --type $type \
     --location $LOCATION \
     --json \
-    $STORAGE_ACCOUNT_NAME
+    $full_storage_account_name
 }
 
-function primary_storage_key() {
+function get_primary_storage_key() {
+  local storage_account_name=$1
+  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
   azure storage account keys list \
     --resource-group $RESOURCE_GROUP_NAME \
-    $STORAGE_ACCOUNT_NAME --json |\
+    $full_storage_account_name --json |\
     jq -r .key1
 }
 
-function secondary_storage_key() {
+function get_secondary_storage_key() {
+  local storage_account_name=$1
+  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
   azure storage account keys list \
     --resource-group $RESOURCE_GROUP_NAME \
-    $STORAGE_ACCOUNT_NAME --json |\
+    $full_storage_account_name --json |\
     jq -r .key2
 }
 
 function get_storage_keys() {
-  cat << EOF
+  storage_account_names=`cat ./config/storage-accounts.yml | ./yaml2json | jq -r .storage_accounts[].name`
+  for name in $storage_account_names; do
+    local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${name}"
+    cat > "${OUTPUT_DIR}/storage-account-${full_storage_account_name}.json" << EOF
 {
-  "primary_storage_key": "$(primary_storage_key)",
-  "secondary_storage_key": "$(secondary_storage_key)"
+  "primary_storage_key": "$(get_primary_storage_key ${name})",
+  "secondary_storage_key": "$(get_secondary_storage_key ${name})"
 }
 EOF
+  done
 }
 
 function test_create_storage_container() {
-  local name=$1
-  PRIMARY_STORAGE_KEY=$(primary_storage_key)
+  local storage_account_name=$1
+  local storage_container=$2
+  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
+  local primary_storage_key=$(get_primary_storage_key $storage_account_name)
 
   local exist=$(azure storage container list \
-    --account-name ${STORAGE_ACCOUNT_NAME} \
-    --account-key ${PRIMARY_STORAGE_KEY} \
-    --json | jq -r ".[]|select(.name == \"${name}\").name")
+    --account-name ${full_storage_account_name} \
+    --account-key ${primary_storage_key} \
+    --json | jq -r ".[]|select(.name == \"${storage_container}\").name")
 
   if [ "$exist" == "" ]; then
     return 1
@@ -70,13 +83,15 @@ function test_create_storage_container() {
 }
 
 function test_create_storage_table() {
-  local name=$1
-  PRIMARY_STORAGE_KEY=$(primary_storage_key)
+  local storage_account_name=$1
+  local storage_table=$2
+  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
+  local primary_storage_key=$(get_primary_storage_key $storage_account_name)
 
   local exist=$(azure storage table list \
-    --account-name ${STORAGE_ACCOUNT_NAME} \
-    --account-key ${PRIMARY_STORAGE_KEY} \
-    --json | jq -r ".[]|select(.name == \"${name}\").name")
+    --account-name ${full_storage_account_name} \
+    --account-key ${primary_storage_key} \
+    --json | jq -r ".[]|select(.name == \"${storage_table}\").name")
 
   if [ "$exist" == "" ]; then
     return 1
@@ -86,22 +101,26 @@ function test_create_storage_table() {
 }
 
 function create_storage_container() {
-  local container=$1
-  PRIMARY_STORAGE_KEY=$(primary_storage_key)
+  local storage_account_name=$1
+  local storage_container=$2
+  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
+  local primary_storage_key=$(get_primary_storage_key $storage_account_name)
   azure storage container create \
-    --account-name $STORAGE_ACCOUNT_NAME \
-    --account-key ${PRIMARY_STORAGE_KEY} \
-    --container $container \
+    --account-name $full_storage_account_name \
+    --account-key ${primary_storage_key} \
+    --container $storage_container \
     --json
 }
 
 function create_storage_table() {
-  local table=$1
-  PRIMARY_STORAGE_KEY=$(primary_storage_key)
+  local storage_account_name=$1
+  local storage_table=$2
+  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
+  local primary_storage_key=$(get_primary_storage_key $storage_account_name)
   azure storage table create \
-      --account-name $STORAGE_ACCOUNT_NAME \
-      --account-key ${PRIMARY_STORAGE_KEY} \
-      --table $table \
+      --account-name $full_storage_account_name \
+      --account-key ${primary_storage_key} \
+      --table $storage_table \
       --json
 }
 
@@ -182,6 +201,13 @@ function create_subnet() {
     --name $name
 }
 
+function create_storage_accounts() {
+  storage_account_names=`cat ./config/storage-accounts.yml | ./yaml2json | jq -r .storage_accounts[].name`
+  for name in $storage_account_names; do
+    local type=`cat config/storage-accounts.yml | ./yaml2json | jq -r ".storage_accounts[] | select(.name == \"${name}\")|.type"`
+    log_output "create_storage_account $name $type" json
+  done
+}
 
 function create_networks() {
   subnet_names=`cat ./config/subnets.yml | ./yaml2json | jq -r .subnets[].name`
@@ -418,14 +444,14 @@ generate_ssh_certs
 
 echo "Bootstrapping Azure for ${ENVIRONMENT}..."
 log_output create_resource_group json
-log_output create_storage_account json
+create_storage_accounts
 
 for storage_container in bosh stemcell; do
-  test_create_storage_container ${storage_container} || log_output "create_storage_container ${storage_container}" json
+  test_create_storage_container bosh ${storage_container} || log_output "create_storage_container bosh ${storage_container}" json
 done
 
 for storage_table in stemcells; do
-  test_create_storage_table ${storage_table} || log_output "create_storage_table ${storage_table}" json
+  test_create_storage_table bosh ${storage_table} || log_output "create_storage_table bosh ${storage_table}" json
 done
 
 for public_ip in `cat ./config/public-ips.yml | ./yaml2json | jq -r .public_ips[]`; do
@@ -456,6 +482,6 @@ for internal_lb_name in $(cat ./config/load-balancers.yml | \
 done
 
 log_output get_public_ips json
-log_output get_storage_keys json
+get_storage_keys
 
 ./create_env.sh ${ENVIRONMENT}

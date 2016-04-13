@@ -16,23 +16,25 @@ echo "Trying to create a new Jumpbox VM..."
 #Create the Azure VM
 cat $SSH_PUBLIC_CERTIFICATE_FILE
 function create_azure_vm(){
-azure vm create \
-  --name $JUMPBOX_NAME \
-  --nic-name $JUMPBOX_NIC \
-  --location $LOCATION \
-  --os-type Linux \
-  --image-urn $JB_IMAGE \
-  --admin-username $JUMPBOX_USER \
-  --admin-password $JUMPBOX_PASSWORD \
-  --vm-size $JB_VM_SIZE \
-  --vnet-name $VIRTUAL_NETWORK_NAME \
-  --vnet-subnet-name $JB_SUBNET_NAME \
-  --storage-account-name $STORAGE_ACCOUNT_NAME \
-  --subscription $SUBSCRIPTION_ID \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --ssh-publickey-file $SSH_PUBLIC_CERTIFICATE_FILE \
-  --verbose \
-  --json
+  local storage_account_name="jumpbox1"
+  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
+  azure vm create \
+    --name $JUMPBOX_NAME \
+    --nic-name $JUMPBOX_NIC \
+    --location $LOCATION \
+    --os-type Linux \
+    --image-urn $JB_IMAGE \
+    --admin-username $JUMPBOX_USER \
+    --admin-password $JUMPBOX_PASSWORD \
+    --vm-size $JB_VM_SIZE \
+    --vnet-name $VIRTUAL_NETWORK_NAME \
+    --vnet-subnet-name $JB_SUBNET_NAME \
+    --storage-account-name $full_storage_account_name \
+    --subscription $SUBSCRIPTION_ID \
+    --resource-group $RESOURCE_GROUP_NAME \
+    --ssh-publickey-file $SSH_PUBLIC_CERTIFICATE_FILE \
+    --verbose \
+    --json
 }
 
 

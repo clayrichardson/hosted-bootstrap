@@ -17,7 +17,10 @@ function get_ipaddress_from_name() {
 }
 
 function get_storage_primary_key() {
-  cat ${OUTPUT_DIR}/get_storage_keys.json | \
+  local name=$1
+  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${name}"
+
+  cat ${OUTPUT_DIR}/storage-account-${full_storage_account_name}.json | \
     jq -r ".primary_storage_key"
 }
 
@@ -62,7 +65,7 @@ function decode_bootstrap_output() {
   export JUMPBOX1_EIP=$(get_ipaddress_from_name jumpbox1_eip)
 
   export CLIENT_ID=$(get_client_id)
-  export SECRET_STORAGE_ACCESS_KEY=$(get_storage_primary_key)
+  export SECRET_BOSH_STORAGE_ACCESS_KEY=$(get_storage_primary_key bosh)
   export SECRET_CLIENT_PASSWORD=$(get_app_client_password)
   export SECRET_JUMPBOX_PASSWORD=$(get_jumpbox_password)
   export SECRET_BOSH_PASSWORD=$(get_bosh_password)
@@ -83,7 +86,7 @@ export TENANT_ID=${SECRET_TENANT_ID}
 export LOCATION=westus
 export STORAGE_TYPE=lrs
 export RESOURCE_GROUP_NAME=${ENVIRONMENT}-resource
-export STORAGE_ACCOUNT_NAME=${ENVIRONMENT}cfhosted2016
+export BOSH_STORAGE_ACCOUNT_NAME=${ENVIRONMENT}bosh
 export PUBLIC_IP_NAME=${ENVIRONMENT}-ip
 export VIRTUAL_NETWORK_NAME=${ENVIRONMENT}-network
 export BOSH_SUBNET_NAME=${ENVIRONMENT}-bosh
@@ -101,7 +104,7 @@ export LOGIN_WILDCARD_EIP="${LOGIN_WILDCARD_EIP}"
 export JUMPBOX1_EIP="${JUMPBOX1_EIP}"
 
 export CLIENT_ID="${CLIENT_ID}"
-export SECRET_STORAGE_ACCESS_KEY="${SECRET_STORAGE_ACCESS_KEY}"
+export SECRET_BOSH_STORAGE_ACCESS_KEY="${SECRET_BOSH_STORAGE_ACCESS_KEY}"
 export SECRET_CLIENT_PASSWORD="${SECRET_CLIENT_PASSWORD}"
 export SECRET_JUMPBOX_PASSWORD="${SECRET_JUMPBOX_PASSWORD}"
 export SECRET_BOSH_PASSWORD="${SECRET_BOSH_PASSWORD}"

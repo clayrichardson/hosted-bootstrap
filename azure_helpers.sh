@@ -50,3 +50,20 @@ function log_output() {
   fi
 }
 
+function get_primary_storage_key() {
+  local storage_account_name=$1
+  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
+  azure storage account keys list \
+    --resource-group $RESOURCE_GROUP_NAME \
+    $full_storage_account_name --json |\
+    jq -r .key1
+}
+
+function get_secondary_storage_key() {
+  local storage_account_name=$1
+  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
+  azure storage account keys list \
+    --resource-group $RESOURCE_GROUP_NAME \
+    $full_storage_account_name --json |\
+    jq -r .key2
+}

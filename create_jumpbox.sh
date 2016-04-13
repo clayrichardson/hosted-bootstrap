@@ -13,11 +13,12 @@ source ${OUTPUT_DIR}/${ENVIRONMENT}_env.sh
 
 echo "Trying to create a new Jumpbox VM..."
 
+STORAGE_ACCOUNT_NAME="jumpbox1"
+FULL_STORAGE_ACCOUNT_NAME="${STORAGE_ACCOUNT_PREFIX}${STORAGE_ACCOUNT_NAME}"
+
 #Create the Azure VM
 cat $SSH_PUBLIC_CERTIFICATE_FILE
 function create_azure_vm(){
-  local storage_account_name="jumpbox1"
-  local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
   azure vm create \
     --name $JUMPBOX_NAME \
     --nic-name $JUMPBOX_NIC \
@@ -29,7 +30,7 @@ function create_azure_vm(){
     --vm-size $JB_VM_SIZE \
     --vnet-name $VIRTUAL_NETWORK_NAME \
     --vnet-subnet-name $JB_SUBNET_NAME \
-    --storage-account-name $full_storage_account_name \
+    --storage-account-name $FULL_STORAGE_ACCOUNT_NAME \
     --subscription $SUBSCRIPTION_ID \
     --resource-group $RESOURCE_GROUP_NAME \
     --ssh-publickey-file $SSH_PUBLIC_CERTIFICATE_FILE \

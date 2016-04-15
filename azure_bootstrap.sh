@@ -87,11 +87,20 @@ function create_storage_container() {
   local storage_container=$2
   local full_storage_account_name="${STORAGE_ACCOUNT_PREFIX}${storage_account_name}"
   local primary_storage_key=$(get_primary_storage_key $storage_account_name)
-  azure storage container create \
-    --account-name $full_storage_account_name \
-    --account-key ${primary_storage_key} \
-    --container $storage_container \
-    --json
+  if [ "${storage_container}" == "stemcell" ]; then
+    azure storage container create \
+      --account-name $full_storage_account_name \
+      --account-key ${primary_storage_key} \
+      --container $storage_container \
+      --permission Blob \
+      --json
+  else
+    azure storage container create \
+      --account-name $full_storage_account_name \
+      --account-key ${primary_storage_key} \
+      --container $storage_container \
+      --json
+  fi
 }
 
 function create_storage_table() {
@@ -185,9 +194,12 @@ function create_subnet() {
 
 function create_storage_accounts() {
   storage_account_names=`cat ./config/storage-accounts.yml | ./yaml2json | jq -r .storage_accounts[].name`
-  for name in $storage_account_names; do
-    local type=`cat config/storage-accounts.yml | ./yaml2json | jq -r ".storage_accounts[] | select(.name == \"${name}\")|.type"`
-    log_output "create_storage_account $name $type" json
+  for storage_account_name in $storage_account_names; do
+    local type=`cat config/storage-accounts.yml | ./yaml2json | jq -r ".storage_accounts[] | select(.name == \"${storage_account_name}\")|.type"`
+    log_output "create_storage_account ${storage_account_name} ${type}" json
+    for storage_container in bosh stemcell; do
+      test_create_storage_container ${storage_account_name} ${storage_container} || log_output "create_storage_container ${storage_account_name} ${storage_container}" json
+    done
   done
 }
 
@@ -427,10 +439,6 @@ generate_ssh_certs
 echo "Bootstrapping Azure for ${ENVIRONMENT}..."
 log_output create_resource_group json
 create_storage_accounts
-
-for storage_container in bosh stemcell; do
-  test_create_storage_container bosh ${storage_container} || log_output "create_storage_container bosh ${storage_container}" json
-done
 
 for storage_table in stemcells; do
   test_create_storage_table bosh ${storage_table} || log_output "create_storage_table bosh ${storage_table}" json

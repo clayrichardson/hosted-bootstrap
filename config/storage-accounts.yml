@@ -1,6 +1,6 @@
 storage_accounts:
   - name: jumpbox1
-    type: plrs
+    type: lrs
   - name: bosh
     type: lrs
   - name: concourse

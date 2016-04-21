@@ -5,8 +5,6 @@ storage_accounts:
     type: lrs
   - name: concourse
     type: plrs
-  - name: conccourselrs
-    type: lrs
   - name: mysqlsa
     type: plrs
   - name: cf

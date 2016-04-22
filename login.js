@@ -73,9 +73,9 @@ steps = [
     function(){
         console.log('Step 5 - Login again');
         page.evaluate(function(configs){
-            document.getElementById("i0116").value = configs.username;
-            document.getElementById("i0118").value = configs.password;
-            document.getElementById("idSIButton9").click();
+            //document.getElementById("i0116").value = configs.username;
+            document.getElementById("passwordInput").value = configs.password;
+            document.getElementById("submitButton").click();
         }, configs);
         page.render("./output/" + configs.environment + "/screen5.png");
     },

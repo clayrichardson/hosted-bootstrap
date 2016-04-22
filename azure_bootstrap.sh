@@ -437,21 +437,21 @@ generate_password
 generate_ssh_certs
 
 echo "Bootstrapping Azure for ${ENVIRONMENT}..."
-log_output create_resource_group json
+# log_output create_resource_group json
 create_storage_accounts
 
 for storage_table in stemcells; do
   test_create_storage_table bosh ${storage_table} || log_output "create_storage_table bosh ${storage_table}" json
 done
 
-for public_ip in `cat ./config/public-ips.yml | ./yaml2json | jq -r .public_ips[]`; do
-  test_create_public_ip ${public_ip} || log_output "create_public_ip ${public_ip}" log
-done
+# for public_ip in `cat ./config/public-ips.yml | ./yaml2json | jq -r .public_ips[]`; do
+#   test_create_public_ip ${public_ip} || log_output "create_public_ip ${public_ip}" log
+# done
 
-vnet_cidr=$(cat ./config/subnets.yml| ./yaml2json | jq -r .network.cidr)
-test_create_vnet ${vnet_cidr} || log_output "create_vnet ${vnet_cidr}" log
+# vnet_cidr=$(cat ./config/subnets.yml| ./yaml2json | jq -r .network.cidr)
+# test_create_vnet ${vnet_cidr} || log_output "create_vnet ${vnet_cidr}" log
 
-create_networks
+# create_networks
 
 test_create_active_directory_app || log_output create_active_directory_app json
 

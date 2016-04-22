@@ -12,8 +12,14 @@ source ./bootstrap_env.sh
 
 function get_ipaddress_from_name() {
   name=$1
-  cat ${OUTPUT_DIR}/get_public_ips.json | \
-    jq -r ".[]| select(.name == \"${name}\")|.ipAddress"
+  local ip=$(cat ${OUTPUT_DIR}/get_public_ips.json | \
+    jq -r ".[]| select(.name == \"${name}\")|.ipAddress")
+  if [ "$ip" == "" ]; then
+    local static=`cat config/subnets.yml | ./yaml2json | jq -r ".subnets[]| select(.name == \"${name}\")|.static"`
+    echo $static | cut -d " " -f 1
+  else
+    echo $ip
+  fi
 }
 
 function get_storage_primary_key() {
@@ -59,10 +65,10 @@ function get_pub_cert() {
 }
 
 function decode_bootstrap_output() {
-  export HAPROXY_EIP=$(get_ipaddress_from_name haproxy_eip)
-  export CONCOURSE_EIP=$(get_ipaddress_from_name concourse_eip)
-  export LOGIN_WILDCARD_EIP=$(get_ipaddress_from_name login_wildcard_eip)
-  export JUMPBOX1_EIP=$(get_ipaddress_from_name jumpbox1_eip)
+  export HAPROXY_EIP=$(get_ipaddress_from_name load-balancer)
+  export CONCOURSE_EIP=$(get_ipaddress_from_name concourse)
+  export LOGIN_WILDCARD_EIP="10.238.195.4"
+  export JUMPBOX1_EIP=$(get_ipaddress_from_name jumpbox1)
 
   export CLIENT_ID=$(get_client_id)
   export SECRET_BOSH_STORAGE_ACCESS_KEY=$(get_storage_primary_key bosh)
